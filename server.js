@@ -220,6 +220,19 @@ app.post('/api/categories', requireAdmin, (req, res) => {
   }
 });
 
+// Suppression d'une catégorie. Les articles déjà publiés avec cette
+// catégorie gardent simplement son nom en texte (ils ne sont pas supprimés).
+app.delete('/api/categories/:name', requireAdmin, (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name);
+    db.prepare('DELETE FROM categories WHERE name = ?').run(name);
+    const categories = db.prepare('SELECT name FROM categories ORDER BY name ASC').all().map(c => c.name);
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- MÉTÉO (proxy vers Open-Meteo, 100% gratuit, sans clé API) ---
 // On passe par le serveur pour éviter tout souci de CORS côté navigateur.
 app.get('/api/weather', async (req, res) => {
