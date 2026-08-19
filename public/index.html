@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le Daily Scoop - Accueil</title>
+  <style>
+    :root {
+      --bg-image: url('accueil.png');
+      --card-bg: rgba(20, 20, 30, 0.65);
+      --card-border: rgba(255, 255, 255, 0.18);
+      --text-color: #ffffff;
+      --subtext-color: #e0e0e0;
+      --glass-blur: blur(16px);
+      --accent: #5865f2;
+    }
+
+    body.light-theme {
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(0, 0, 0, 0.1);
+      --text-color: #1a1a1a;
+      --subtext-color: #4a4a4a;
+    }
+
+    body.opaque-mode {
+      --glass-blur: blur(0px);
+      --card-bg: #1e1f29;
+    }
+
+    body.light-theme.opaque-mode {
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-image) no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* En-tête / Barre supérieure */
+    .chrome-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--card-border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tabs-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .google-tab {
+      padding: 8px 18px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px 12px 0 0;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .google-tab.active {
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-bottom: none;
+      color: var(--text-color);
+    }
+
+    /* Widget météo discret */
+    .weather-widget {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    /* Barre de réglages */
+    .controls-bar {
+      max-width: 900px;
+      width: 100%;
+      margin: 20px auto 10px;
+      padding: 12px 20px;
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      margin: 10px auto 30px;
+      padding: 0 15px;
+      flex-grow: 1;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Barre de recherche */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-bar input {
+      flex-grow: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-color);
+      font-size: 0.95rem;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--subtext-color);
+    }
+
+    .search-bar button {
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Pied de carte article : réactions + partage */
+    .article-footer {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reactions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .reaction-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-color);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .reaction-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .reaction-btn.reacted {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .reaction-btn .count {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .share-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      position: relative;
+    }
+
+    .share-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      color: #fff;
+      transition: transform 0.15s;
+    }
+
+    .share-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .share-btn.whatsapp { background: #25D366; }
+    .share-btn.x { background: #000000; }
+    .share-btn.discord { background: #5865F2; }
+    .share-btn.messenger { background: #00B2FF; }
+    .share-btn.snapchat { background: #FFFC00; color: #111; }
+    .share-btn.instagram { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+    .share-btn.native { background: rgba(255,255,255,0.2); }
+    .share-btn.copy-link { background: rgba(255,255,255,0.2); }
+
+    .copied-popup {
+      position: absolute;
+      bottom: 42px;
+      right: 0;
+      background: #28a745;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: opacity 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+
+    .copied-popup.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Pied de page avec liens réseaux */
+    footer {
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--card-border);
+      padding: 20px;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    footer h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      color: var(--text-color);
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 0.9rem;
+      transition: transform 0.2s;
+    }
+
+    .social-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .social-btn.discord { background: #5865F2; }
+    .social-btn.youtube { background: #FF0000; }
+    .social-btn.twitch { background: #9146FF; }
+  </style>
+</head>
+<body>
+
+  <!-- Barre d'onglets principale -->
+  <header class="chrome-bar">
+    <nav class="tabs-container">
+      <button class="google-tab active" onclick="showSection('accueil')">🌐 Accueil</button>
+      <button class="google-tab" onclick="showSection('actus')">📰 Actualités</button>
+    </nav>
+    <div class="weather-widget" id="weatherWidget">⏳ Météo...</div>
+  </header>
+
+  <!-- Réglages d'apparence (Sombre/Clair & Glass/Opaque) -->
+  <div class="controls-bar">
+    <span>🎨 <strong>Apparence</strong></span>
+    <div>
+      <button class="control-btn" id="themeToggle">Sombre / Clair</button>
+      <button class="control-btn" id="glassToggle">Liquid Glass / Opaque</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- SECTION ACCUEIL -->
+    <main id="accueil" class="section active">
+      <div class="card">
+        <h1>Bienvenue sur Le Daily Scoop</h1>
+        <br>
+        <p>Retrouve toutes les actualités et les dernières informations en direct.</p>
+      </div>
+    </main>
+
+    <!-- SECTION ACTUALITÉS -->
+    <main id="actus" class="section">
+      <div class="card">
+        <h2>Dernières Actualités</h2>
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="🔎 Rechercher un article par mot-clé...">
+          <button onclick="searchArticles()">Rechercher</button>
+        </div>
+      </div>
+      <div id="actuFeed">
+        <p style="text-align: center;">Chargement des articles...</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Pied de page avec tes chaînes -->
+  <footer>
+    <h3>Nous suivre sur nos réseaux</h3>
+    <div class="social-links">
+      <a href="https://discord.gg/Zb2DX9GNJ" target="_blank" class="social-btn discord">Discord</a>
+      <a href="https://youtube.com/@valtrackplayer" target="_blank" class="social-btn youtube">YouTube</a>
+      <a href="https://twitch.com/valtrackplayer" target="_blank" class="social-btn twitch">Twitch</a>
+    </div>
+  </footer>
+
+  <script>
+    // --- Gestion Thème & Glassmorphism ---
+    const themeToggle = document.getElementById('themeToggle');
+    const glassToggle = document.getElementById('glassToggle');
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    });
+
+    glassToggle.addEventListener('click', () => {
+      document.body.classList.toggle('opaque-mode');
+      localStorage.setItem('glass', document.body.classList.contains('opaque-mode') ? 'opaque' : 'glass');
+    });
+
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+    if (localStorage.getItem('glass') === 'opaque') document.body.classList.add('opaque-mode');
+
+    // --- Navigation par Onglets ---
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.google-tab').forEach(btn => btn.classList.remove('active'));
+
+      const target = document.getElementById(sectionId);
+      if (target) target.classList.add('active');
+
+      const buttons = document.querySelectorAll('.google-tab');
+      if (sectionId === 'accueil') buttons[0]?.classList.add('active');
+      if (sectionId === 'actus') {
+        buttons[1]?.classList.add('active');
+        loadArticles();
+      }
+    }
+
+    // Redirection vers /admin pour l'accès administrateur (le panneau n'est
+    // plus dupliqué dans cette page : il vit uniquement dans admin.html).
+    function checkHash() {
+      if (window.location.hash === '#admin') {
+        window.location.href = '/admin';
+      }
+    }
+    window.addEventListener('hashchange', checkHash);
+    window.addEventListener('load', checkHash);
+
+    // --- Météo (widget discret, via le proxy serveur) ---
+    const WEATHER_CODES = {
+      0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+      45: '🌫️', 48: '🌫️',
+      51: '🌦️', 53: '🌦️', 55: '🌦️',
+      61: '🌧️', 63: '🌧️', 65: '🌧️',
+      71: '🌨️', 73: '🌨️', 75: '🌨️',
+      80: '🌦️', 81: '🌧️', 82: '⛈️',
+      95: '⛈️', 96: '⛈️', 99: '⛈️',
+    };
+
+    async function loadWeather(lat, lon) {
+      const widget = document.getElementById('weatherWidget');
+      try {
+        const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        const data = await res.json();
+        if (data.temperature === undefined || data.temperature === null) throw new Error();
+        const icon = WEATHER_CODES[data.weatherCode] || '🌡️';
+        widget.textContent = `${icon} ${Math.round(data.temperature)}°C`;
+      } catch (err) {
+        widget.textContent = '🌡️ Météo indisponible';
+      }
+    }
+
+    function initWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => loadWeather(pos.coords.latitude, pos.coords.longitude),
+          () => loadWeather(48.8566, 2.3522), // Paris par défaut si refusé
+          { timeout: 5000 }
+        );
+      } else {
+        loadWeather(48.8566, 2.3522);
+      }
+    }
+    initWeather();
+
+    // --- Réactions déjà données par ce visiteur (stockées localement) ---
+    function getReactedSet() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem('reactedArticles') || '[]'));
+      } catch { return new Set(); }
+    }
+    function markReacted(articleId) {
+      const set = getReactedSet();
+      set.add(String(articleId));
+      localStorage.setItem('reactedArticles', JSON.stringify([...set]));
+    }
+
+    async function react(articleId, type, btnEl) {
+      const reacted = getReactedSet();
+      if (reacted.has(String(articleId))) return; // une seule réaction par article/visiteur
+
+      try {
+        const res = await fetch(`/api/actu/${articleId}/react`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type })
+        });
+        const updated = await res.json();
+        markReacted(articleId);
+
+        const card = btnEl.closest('.card');
+        card.querySelectorAll('.reaction-btn').forEach(b => b.classList.remove('reacted'));
+        btnEl.classList.add('reacted');
+
+        card.querySelector(`[data-type="like"] .count`).textContent = updated.react_like;
+        card.querySelector(`[data-type="love"] .count`).textContent = updated.react_love;
+        card.querySelector(`[data-type="wow"] .count`).textContent = updated.react_wow;
+        card.querySelector(`[data-type="angry"] .count`).textContent = updated.react_angry;
+      } catch (err) {
+        console.error('Erreur réaction', err);
+      }
+    }
+
+    // --- Partage & copie de lien ---
+    function articleUrl(id) {
+      return `${window.location.origin}/#article-${id}`;
+    }
+
+    async function copyLink(id, btnEl) {
+      const url = articleUrl(id);
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (err) {
+        // Solution de repli si l'API clipboard n'est pas disponible
+        const tmp = document.createElement('textarea');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+      }
+      const popup = btnEl.parentElement.querySelector('.copied-popup');
+      popup.classList.add('show');
+      setTimeout(() => popup.classList.remove('show'), 1800);
+    }
+
+    function shareNative(title, url) {
+      if (navigator.share) {
+        navigator.share({ title, url }).catch(() => {});
+      } else {
+        alert("Le partage natif n'est pas disponible sur ce navigateur. Utilise les icônes ou le bouton copier le lien.");
+      }
+    }
+
+    function openShare(platform, title, url) {
+      const encodedUrl = encodeURIComponent(url);
+      const encodedText = encodeURIComponent(title);
+      let shareUrl = '';
+
+      switch (platform) {
+        case 'whatsapp':
+          shareUrl = `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`;
+          break;
+        case 'x':
+          shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+          break;
+        case 'messenger':
+          // Fonctionne surtout sur mobile (deep link de l'appli Messenger)
+          shareUrl = `fb-messenger://share?link=${encodedUrl}`;
+          break;
+        default:
+          return;
+      }
+      window.open(shareUrl, '_blank', 'noopener');
+    }
+
+    // --- API Actualités (Chargement, Recherche & Affichage) ---
+    function renderArticles(articles) {
+      const feed = document.getElementById('actuFeed');
+      const reacted = getReactedSet();
+
+      if (articles.length === 0) {
+        feed.innerHTML = '<div class="card"><p>Aucun article trouvé.</p></div>';
+        return;
+      }
+
+      feed.innerHTML = articles.map(art => {
+        let mediaHtml = '';
+
+        if (art.image) {
+          const fileUrl = art.image;
+          const ext = fileUrl.split('.').pop().toLowerCase();
+
+          if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+            mediaHtml = `<video controls style="width: 100%; max-height: 400px; border-radius: 8px; margin-bottom: 12px; background: #000;">
+              <source src="${fileUrl}">
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </video>`;
+          } else if (['mp3', 'wav', 'm4a', 'flac'].includes(ext)) {
+            mediaHtml = `<audio controls style="width: 100%; margin-bottom: 12px;">
+              <source src="${fileUrl}">
+              Votre navigateur ne supporte pas le lecteur audio.
+            </audio>`;
+          } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+            mediaHtml = `<img src="${fileUrl}" alt="Illustration" style="max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`;
+          } else {
+            mediaHtml = `<div style="margin-bottom: 12px;">
+              <a href="${fileUrl}" target="_blank" download class="control-btn" style="display: inline-block; text-decoration: none;">
+                📁 Télécharger le fichier joint (${ext.toUpperCase()})
+              </a>
+            </div>`;
+          }
+        }
+
+        const url = articleUrl(art.id);
+        const alreadyReacted = reacted.has(String(art.id));
+        const safeTitle = art.title.replace(/'/g, "\\'");
+
+        return `
+          <div class="card" id="article-${art.id}">
+            ${art.category ? `<span style="background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; float: right;">${art.category}</span>` : ''}
+            <h2>${art.title}</h2>
+            <br>
+            ${mediaHtml}
+            <p style="white-space: pre-line;">${art.content}</p>
+            <br>
+            <small style="opacity: 0.7;">Publié le ${new Date(art.date).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</small>
+
+            <div class="article-footer">
+              <div class="reactions">
+                <button class="reaction-btn ${alreadyReacted ? '' : ''}" data-type="like" onclick="react(${art.id}, 'like', this)">👍 <span class="count">${art.react_like || 0}</span></button>
+                <button class="reaction-btn" data-type="love" onclick="react(${art.id}, 'love', this)">❤️ <span class="count">${art.react_love || 0}</span></button>
+                <button class="reaction-btn" data-type="wow" onclick="react(${art.id}, 'wow', this)">😮 <span class="count">${art.react_wow || 0}</span></button>
+                <button class="reaction-btn" data-type="angry" onclick="react(${art.id}, 'angry', this)">😡 <span class="count">${art.react_angry || 0}</span></button>
+              </div>
+
+              <div class="share-row">
+                <button class="share-btn native" title="Partager..." onclick="shareNative('${safeTitle}', '${url}')">📤</button>
+                <a class="share-btn whatsapp" title="WhatsApp" onclick="openShare('whatsapp', '${safeTitle}', '${url}'); return false;" href="#">🟢</a>
+                <a class="share-btn x" title="X (Twitter)" onclick="openShare('x', '${safeTitle}', '${url}'); return false;" href="#">✖️</a>
+                <a class="share-btn messenger" title="Messenger" onclick="openShare('messenger', '${safeTitle}', '${url}'); return false;" href="#">💬</a>
+                <button class="share-btn discord" title="Copier puis coller sur Discord" onclick="copyLink(${art.id}, this)">🎮</button>
+                <button class="share-btn copy-link" title="Copier le lien" onclick="copyLink(${art.id}, this)">🔗
+                  <span class="copied-popup">Lien copié !</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Applique le style "réagi" pour les articles déjà réagis sur cet appareil
+      reacted.forEach(id => {
+        const card = document.getElementById(`article-${id}`);
+        if (card) card.querySelectorAll('.reaction-btn').forEach(b => b.style.opacity = '0.85');
+      });
+    }
+
+    async function loadArticles() {
+      const feed = document.getElementById('actuFeed');
+      try {
+        const res = await fetch('/api/actu');
+        const articles = await res.json();
+        renderArticles(articles);
+      } catch (err) {
+        feed.innerHTML = '<div class="card"><p style="color: #ff6b6b;">Erreur de connexion au serveur.</p></div>';
+      }
+    }
+
+    async function searchArticles() {
+      const q = document.getElementById('searchInput').value.trim();
+      const feed = document.getElementById('actuFeed');
+      try {
+        const res = await fetch(`/api/actu?q=${encodeURIComponent(q)}`);
+        const articles = await res.json();
+        renderArticles(articles);
+      } catch (err) {
+        feed.innerHTML = '<div class="card"><p style="color: #ff6b6b;">Erreur de connexion au serveur.</p></div>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchArticles();
+    });
+  </script>
+</body>
+</html>
