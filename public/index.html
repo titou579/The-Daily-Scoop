@@ -48,6 +48,134 @@
       flex-direction: column;
     }
 
+    /* Barre de progression de lecture */
+    #readingProgress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
+      z-index: 9999;
+      transition: width 0.1s ease-out;
+    }
+
+    /* Bouton retour en haut */
+    #backToTop {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      z-index: 900;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    #backToTop.visible {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Lightbox pour les images */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      padding: 30px;
+      cursor: zoom-out;
+    }
+
+    .lightbox-overlay.open {
+      display: flex;
+    }
+
+    .lightbox-overlay img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 20px;
+      right: 28px;
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+
+    .article-image {
+      cursor: zoom-in;
+    }
+
+    /* Badge "Nouveau" */
+    .new-badge {
+      display: inline-block;
+      background: #ff4d4d;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+      vertical-align: middle;
+      letter-spacing: 0.3px;
+    }
+
+    /* Temps de lecture */
+    .reading-time {
+      opacity: 0.75;
+      font-size: 0.82rem;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Bouton lecture audio (Text-to-Speech) */
+    .tts-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tts-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .tts-btn.speaking {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
     /* En-tête / Barre supérieure */
     .chrome-bar {
       display: flex;
@@ -340,6 +468,9 @@
 </head>
 <body>
 
+  <!-- Barre de progression de lecture -->
+  <div id="readingProgress"></div>
+
   <!-- Barre d'onglets principale -->
   <header class="chrome-bar">
     <nav class="tabs-container">
@@ -393,6 +524,15 @@
     </div>
   </footer>
 
+  <!-- Bouton retour en haut -->
+  <button id="backToTop" title="Retour en haut" onclick="window.scrollTo({top:0, behavior:'smooth'})">⬆️</button>
+
+  <!-- Lightbox pour les images -->
+  <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+    <img id="lightboxImg" src="" alt="Aperçu en grand">
+  </div>
+
   <script>
     // --- Gestion Thème & Glassmorphism ---
     const themeToggle = document.getElementById('themeToggle');
@@ -425,6 +565,90 @@
         buttons[1]?.classList.add('active');
         loadArticles();
       }
+
+      // Mémorisation de la navigation : on retrouve le même onglet après un refresh
+      localStorage.setItem('lastSection', sectionId);
+    }
+
+    // Au chargement, on restaure le dernier onglet visité (par défaut : accueil)
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('lastSection');
+      if (saved && document.getElementById(saved)) {
+        showSection(saved);
+      }
+    });
+
+    // --- Barre de progression de lecture + bouton retour en haut ---
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      document.getElementById('readingProgress').style.width = progress + '%';
+
+      const backBtn = document.getElementById('backToTop');
+      if (scrollTop > 400) {
+        backBtn.classList.add('visible');
+      } else {
+        backBtn.classList.remove('visible');
+      }
+    });
+
+    // --- Lightbox (visionneuse d'images plein écran) ---
+    function openLightbox(src) {
+      document.getElementById('lightboxImg').src = src;
+      document.getElementById('lightboxOverlay').classList.add('open');
+    }
+
+    function closeLightbox(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('lightboxOverlay').classList.remove('open');
+    }
+
+    // --- Temps de lecture estimé (≈ 200 mots/minute) ---
+    function estimateReadingTime(text) {
+      const words = text.trim().split(/\s+/).filter(Boolean).length;
+      const minutes = Math.max(1, Math.round(words / 200));
+      return `📖 ${minutes} min de lecture`;
+    }
+
+    // --- Lecture audio (Text-to-Speech, API native du navigateur) ---
+    let currentUtterance = null;
+    let currentSpeakingBtn = null;
+
+    function toggleSpeech(articleId, title, content, btnEl) {
+      if (!('speechSynthesis' in window)) {
+        alert("La lecture audio n'est pas supportée par ce navigateur.");
+        return;
+      }
+
+      // Si on reclique sur l'article en cours de lecture -> on arrête
+      if (currentSpeakingBtn === btnEl && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        return;
+      }
+
+      // On arrête toute lecture en cours avant d'en démarrer une nouvelle
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(`${title}. ${content}`);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 1;
+
+      utterance.onstart = () => {
+        document.querySelectorAll('.tts-btn').forEach(b => { b.classList.remove('speaking'); b.textContent = '🔊 Écouter l\'article'; });
+        btnEl.classList.add('speaking');
+        btnEl.textContent = '⏹️ Arrêter la lecture';
+        currentSpeakingBtn = btnEl;
+      };
+
+      utterance.onend = utterance.onerror = () => {
+        btnEl.classList.remove('speaking');
+        btnEl.textContent = '🔊 Écouter l\'article';
+        currentSpeakingBtn = null;
+      };
+
+      currentUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
     }
 
     // Redirection vers /admin pour l'accès administrateur (le panneau n'est
@@ -593,7 +817,7 @@
               Votre navigateur ne supporte pas le lecteur audio.
             </audio>`;
           } else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
-            mediaHtml = `<img src="${fileUrl}" alt="Illustration" style="max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`;
+            mediaHtml = `<img src="${fileUrl}" alt="Illustration" class="article-image" onclick="openLightbox('${fileUrl}')" style="max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`;
           } else {
             mediaHtml = `<div style="margin-bottom: 12px;">
               <a href="${fileUrl}" target="_blank" download class="control-btn" style="display: inline-block; text-decoration: none;">
@@ -606,15 +830,21 @@
         const url = articleUrl(art.id);
         const alreadyReacted = reacted.has(String(art.id));
         const safeTitle = art.title.replace(/'/g, "\\'");
+        const safeContent = art.content.replace(/'/g, "\\'").replace(/\n/g, ' ');
+        const readingTime = estimateReadingTime(art.content);
+        const isNew = (Date.now() - new Date(art.date).getTime()) < 24 * 60 * 60 * 1000;
 
         return `
           <div class="card" id="article-${art.id}">
             ${art.category ? `<span style="background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; float: right;">${art.category}</span>` : ''}
-            <h2>${art.title}</h2>
+            <h2>${art.title}${isNew ? '<span class="new-badge">🆕 NOUVEAU</span>' : ''}</h2>
+            <span class="reading-time">${readingTime}</span>
             <br>
             ${mediaHtml}
             <p style="white-space: pre-line;">${art.content}</p>
             <br>
+            <button class="tts-btn" onclick="toggleSpeech(${art.id}, '${safeTitle}', '${safeContent}', this)">🔊 Écouter l'article</button>
+            <br><br>
             <small style="opacity: 0.7;">Publié le ${new Date(art.date).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</small>
 
             <div class="article-footer">
