@@ -6,7 +6,7 @@
   <title>Le Daily Scoop - Administration</title>
   <style>
     :root {
-      --bg-image: url('accueil 2.png');
+      --bg-image: url('accueil2.png');
       --card-bg: rgba(20, 20, 30, 0.70);
       --card-border: rgba(255, 255, 255, 0.18);
       --text-color: #ffffff;
@@ -218,11 +218,34 @@
     }
 
     .chip {
-      padding: 6px 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px 6px 14px;
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid var(--card-border);
       border-radius: 20px;
       font-size: 0.85rem;
+    }
+
+    .chip-delete {
+      background: rgba(220, 53, 69, 0.85);
+      border: none;
+      color: #fff;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.75rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .chip-delete:hover {
+      background: #dc3545;
     }
 
     .info-box {
@@ -443,9 +466,28 @@
         const select = document.getElementById('art-category');
         const list = document.getElementById('categoriesList');
         select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
-        list.innerHTML = categories.map(c => `<span class="chip">${c}</span>`).join('');
+        list.innerHTML = categories.map(c => `
+          <span class="chip">
+            ${c}
+            <button class="chip-delete" title="Supprimer cette catégorie" onclick="deleteCategory('${c.replace(/'/g, "\\'")}')">✕</button>
+          </span>
+        `).join('');
       } catch (err) {
         console.error('Erreur chargement catégories', err);
+      }
+    }
+
+    async function deleteCategory(name) {
+      if (!confirm(`Supprimer la catégorie "${name}" ? (les articles déjà publiés avec cette catégorie ne seront pas supprimés)`)) return;
+      try {
+        const res = await fetch(`/api/categories/${encodeURIComponent(name)}`, {
+          method: 'DELETE',
+          headers: authHeaders()
+        });
+        if (res.status === 401) { alert('Session expirée, reconnecte-toi.'); logout(); return; }
+        await loadCategories();
+      } catch (err) {
+        alert('Erreur lors de la suppression de la catégorie.');
       }
     }
 
